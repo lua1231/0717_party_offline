@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <title>파티 버프 계산기</title>
 <style>
-body { font-family:'Segoe UI', sans-serif; margin:0; background:#f0f2f5; color:#333; display:flex; flex-direction:column; min-height:200vh; padding-bottom:220px;}
+body { font-family:'Segoe UI', sans-serif; margin:0; background:#f0f2f5; color:#333; display:flex; flex-direction:column; min-height:200vh; padding-bottom:220px; position:relative;}
 header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-align:center; font-size:28px; font-weight:bold; color:white; letter-spacing:2px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
 
 /* main-container를 flex로 변경하여 내부 요소들이 가로로 배치되도록 수정 */
-.main-container { display:flex; max-width:1200px; margin:20px auto; flex-wrap:wrap; gap:20px;}
+.main-container { display:flex; max-width:1200px; margin:20px auto; flex-wrap:wrap; gap:20px; position: relative;}
 
 /* 카테고리 버튼들을 담을 새로운 컨테이너 추가 */
 .category-container {
@@ -36,6 +36,42 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
     color: inherit;
 }
 .category-btn.active { background:#ffd580; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+
+/* 업데이트 로그 컨테이너 */
+.update-log-container {
+    width: 250px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: -280px; /* main-container의 왼쪽으로 280px 이동 */
+    font-size: 14px;
+}
+.update-log-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #6a8cff;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+.update-log-item {
+    margin-bottom: 15px;
+}
+.update-log-date {
+    font-weight: bold;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+.update-log-content {
+    color: #777;
+    line-height: 1.5;
+}
 
 .container { display:grid; grid-template-columns:repeat(8,120px); gap:16px; justify-content:start; align-content:start; flex:1;}
 .character { background:white; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; padding:10px; cursor:pointer; transition: transform 0.3s, box-shadow 0.3s, border 0.3s; position:relative;}
@@ -73,17 +109,24 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
 </div>
 
 <div class="main-container">
+    <div class="update-log-container">
+        <h3>업데이트 내역</h3>
+        <div class="update-log-item">
+            <div class="update-log-date">2025.08.23</div>
+            <div class="update-log-content">- ui 디자인 개선</div>
+        </div>
+        </div>
     <div class="container" id="character-container"></div>
 </div>
 <div class="cart">
     <h2>선택한 캐릭터</h2>
     <div class="cart-items" id="cart-items"></div>
 <div class="stats">
-    총 실뎀증: <span id="total-damage">0%</span> | 
-    쿨가속: <span id="total-speed">1</span> | 
-    쿨감: <span id="total-cd">0</span> | 
-    마클쿨가속: <span id="total-mcl">1</span> | 
-    하액쿨가속: <span id="total-hac">1</span> | 
+    총 실뎀증: <span id="total-damage">약 0.00%(배)</span> | 
+    쿨가속: <span id="total-speed">1.00배</span> | 
+    쿨감: <span id="total-cd">0초</span> | 
+    마클쿨가속: <span id="total-mcl">1.00배</span> | 
+    하액쿨가속: <span id="total-hac">1.00배</span> | 
     <span id="good-party"></span>
     <span id="mix-warning" class="warning">물마 혼합 주의</span>
 </div>
@@ -214,8 +257,10 @@ function updateBuffButton(container, char){
     container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
     
     if(char.buffMode){
-        const activeBtn = Array.from(container.querySelectorAll('button'))
-            .find(b => b.textContent.replace(/\s/g,'') === char.buffMode.replace(/\s/g,''));
+        // data-mode 속성으로 직접 비교하도록 수정
+        const activeBtn = Array.from(container.querySelectorAll('button')).find(b => {
+            return b.dataset.mode === char.buffMode;
+        });
         if(activeBtn) activeBtn.classList.add('active');
     }
 }
@@ -239,6 +284,8 @@ function updateCart(){
         if(/[~\/]/.test(buffStr) && ![12,48,54,58].includes(char.id)){
             const lowBtn = document.createElement('button');
             const highBtn = document.createElement('button');
+            lowBtn.dataset.mode = 'low';
+            highBtn.dataset.mode = 'high';
             let nums = buffStr.match(/[\d.]+/g).map(Number);
             lowBtn.textContent = `저점 (${nums[0]}%)`;
             highBtn.textContent = `고점 (${nums[nums.length-1]}%)`;
@@ -260,24 +307,32 @@ function updateCart(){
             if(char.id===48){
                 const 노첸Btn=document.createElement('button'); const 첸Btn=document.createElement('button');
                 노첸Btn.textContent='노첸'; 첸Btn.textContent='첸';
+                노첸Btn.dataset.mode = '노첸';
+                첸Btn.dataset.mode = '첸';
                 노첸Btn.addEventListener('click', ()=>{ char.buffMode='노첸'; updateCart(); });
                 첸Btn.addEventListener('click', ()=>{ char.buffMode='첸'; updateCart(); });
                 buffDivElement.appendChild(노첸Btn); buffDivElement.appendChild(첸Btn);
             } else if(char.id===58){
                 const 비서약Btn=document.createElement('button'); const 서약Btn=document.createElement('button');
                 비서약Btn.textContent='비서약'; 서약Btn.textContent='서약';
+                비서약Btn.dataset.mode = '비서약';
+                서약Btn.dataset.mode = '서약';
                 비서약Btn.addEventListener('click',()=>{ char.buffMode='비서약'; updateCart(); });
                 서약Btn.addEventListener('click',()=>{ char.buffMode='서약'; updateCart(); });
                 buffDivElement.appendChild(비서약Btn); buffDivElement.appendChild(서약Btn);
             } else if(char.id===54){
                 const 기본Btn=document.createElement('button'); const 미지Btn=document.createElement('button');
                 기본Btn.textContent='기본'; 미지Btn.textContent='미지';
+                기본Btn.dataset.mode = '기본';
+                미지Btn.dataset.mode = '미지';
                 기본Btn.addEventListener('click',()=>{ char.buffMode='기본'; updateCart(); });
                 미지Btn.addEventListener('click',()=>{ char.buffMode='미지'; updateCart(); });
                 buffDivElement.appendChild(기본Btn); buffDivElement.appendChild(미지Btn);
             } else if(char.id===12){
                 const xBtn=document.createElement('button'); const oBtn=document.createElement('button');
                 xBtn.textContent='보뎀X'; oBtn.textContent='보뎀O';
+                xBtn.dataset.mode = '보뎀X';
+                oBtn.dataset.mode = '보뎀O';
                 xBtn.addEventListener('click',()=>{ char.buffMode='보뎀X'; updateCart(); });
                 oBtn.addEventListener('click',()=>{ char.buffMode='보뎀O'; updateCart(); });
                 buffDivElement.appendChild(xBtn); buffDivElement.appendChild(oBtn);
@@ -329,11 +384,11 @@ function updateCart(){
         cartItems.appendChild(item);
     });
 
-    totalDamage.textContent = ((totalBuff - 1) * 100).toFixed(2) + '%';
-    totalSpeed.textContent = totalCool.toFixed(2);
-    totalCd.textContent = totalCdVal;
-    totalMcl.textContent = totalMclVal.toFixed(2);
-    totalHac.textContent = totalHacVal.toFixed(2);
+    totalDamage.textContent = `약 ${((totalBuff - 1) * 100).toFixed(2)}%(배)`;
+    totalSpeed.textContent = `${totalCool.toFixed(2)}배`;
+    totalCd.textContent = `${totalCdVal}초`;
+    totalMcl.textContent = `${totalMclVal.toFixed(2)}배`;
+    totalHac.textContent = `${totalHacVal.toFixed(2)}배`;
 }
 
 
