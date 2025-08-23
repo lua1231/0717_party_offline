@@ -114,6 +114,7 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
         <div class="update-log-item">
             <div class="update-log-date">2025.08.23</div>
             <div class="update-log-content">- ui 디자인 개선</div>
+	<div class="update-log-content">- 오버마인드 선택란 추가</div>
         </div>
         </div>
     <div class="container" id="character-container"></div>
@@ -280,8 +281,21 @@ function updateCart(){
 
         let buffDivElement = document.createElement('div');
         buffDivElement.classList.add('buff-mode');
-
-        if(/[~\/]/.test(buffStr) && ![12,48,54,58].includes(char.id)){
+        
+        // 오버마인드 전용 버튼 로직
+        if(char.id===36){
+            if(!char.buffMode) char.buffMode='트롤리';
+            const trolleyBtn=document.createElement('button');
+            const messBtn=document.createElement('button');
+            trolleyBtn.textContent='트롤리'; messBtn.textContent='메스';
+            trolleyBtn.dataset.mode = '트롤리';
+            messBtn.dataset.mode = '메스';
+            trolleyBtn.addEventListener('click',()=>{ char.buffMode='트롤리'; updateCart(); });
+            messBtn.addEventListener('click',()=>{ char.buffMode='메스'; updateCart(); });
+            buffDivElement.appendChild(trolleyBtn); buffDivElement.appendChild(messBtn);
+            updateBuffButton(buffDivElement, char);
+        }
+        else if(/[~\/]/.test(buffStr) && ![12,48,54,58].includes(char.id)){
             const lowBtn = document.createElement('button');
             const highBtn = document.createElement('button');
             lowBtn.dataset.mode = 'low';
@@ -347,7 +361,16 @@ function updateCart(){
         let coolVal = Number(char.cool || 1);
         let mclVal = Number(char.cool_mcl || 1);
         let hacVal = Number(char.cool_hac || 1);
-
+        
+        if (char.id === 36) {
+            if (char.buffMode === '메스') {
+                buffValue = 49.96;
+                coolVal = 1;
+            } else if (char.buffMode === '트롤리') {
+                buffValue = 36.07;
+                coolVal = 1.5;
+            }
+        }
         if (char.id === 58) {
             if (char.buffMode === '비서약') coolVal = 1.2;
             else if (char.buffMode === '서약') coolVal = 1.3;
