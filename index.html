@@ -7,15 +7,15 @@
 body { font-family:'Segoe UI', sans-serif; margin:0; background:#f0f2f5; color:#333; display:flex; flex-direction:column; min-height:200vh; padding-bottom:220px; position:relative;}
 header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-align:center; font-size:28px; font-weight:bold; color:white; letter-spacing:2px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
 
-/* main-container를 flex로 변경하여 내부 요소들이 가로로 배치되도록 수정 */
+
 .main-container { display:flex; max-width:1200px; margin:20px auto; flex-wrap:wrap; gap:20px; position: relative;}
 
-/* 카테고리 버튼들을 담을 새로운 컨테이너 추가 */
+
 .category-container {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    margin-top: 15px; /* 제목과 간격 추가 */
+    margin-top: 15px; 
     justify-content: center;
     width: 100%;
 }
@@ -29,15 +29,15 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     transition: all 0.25s;
     font-weight: bold;
-    /* 추가: 버튼을 가로로 정렬하고 너비를 동일하게 맞춤 */
+    
     flex-grow: 1;
-    max-width: 150px; /* 최대 너비 설정으로 너무 늘어나지 않게 함 */
+    max-width: 150px; 
     text-decoration: none;
     color: inherit;
 }
 .category-btn.active { background:#ffd580; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
 
-/* 업데이트 로그 컨테이너 */
+
 .update-log-container {
     width: 250px;
     background: #fff;
@@ -47,7 +47,7 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
     box-sizing: border-box;
     position: absolute;
     top: 0;
-    left: -280px; /* main-container의 왼쪽으로 280px 이동 */
+    left: -280px; 
     font-size: 14px;
 }
 .update-log-container h3 {
@@ -91,11 +91,26 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
 .remove-btn:hover { background:#e64545;}
 .buff-mode { font-size:12px; display:flex; gap:6px; margin-top:4px; justify-content:center;}
 .buff-mode button { background:#ddd; border:none; border-radius:8px; padding:3px 8px; cursor:pointer; font-size:11px; transition:all 0.25s; }
-.buff-mode button:hover { background:#ccc; }
 .buff-mode button.active { background:#6a8cff; color:white; box-shadow:0 0 5px rgba(0,0,0,0.2);}
 .stats { margin-top:10px; font-size:16px; font-weight:bold; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
 .warning { display:inline-block; background:#ffe4e1; padding:5px 10px; border-radius:12px; font-weight:bold; color:red;}
 .tooltip { position:absolute; background:#fff; border:1px solid #ccc; border-radius:8px; padding:6px 10px; font-size:13px; font-weight:bold; color:#333; box-shadow:0 2px 8px rgba(0,0,0,0.25); pointer-events:none; opacity:0; transition:opacity 0.2s; z-index:200; white-space:nowrap;}
+
+
+#challenge-mode-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: bold;
+    color: #555;
+    margin-top: 10px;
+    gap: 15px; 
+}
+#challenge-mode {
+    margin-left: 8px;
+    transform: scale(1.1);
+}
 </style>
 </head>
 <body>
@@ -114,9 +129,13 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
         <div class="update-log-item">
             <div class="update-log-date">2025.08.23</div>
             <div class="update-log-content">- ui 디자인 개선</div>
-	<div class="update-log-content">- 오버마인드 선택란 추가</div>
+            <div class="update-log-content">- 오버마인드 선택란 추가</div>
         </div>
+        <div class="update-log-item">
+            <div class="update-log-date">2025.09.14</div>
+            <div class="update-log-content">- 모든 캐릭터 방깎 수치 추가</div>
         </div>
+    </div>
     <div class="container" id="character-container"></div>
 </div>
 <div class="cart">
@@ -132,80 +151,99 @@ header { background:linear-gradient(135deg,#6a8cff,#b08aff); padding:25px; text-
     <span id="mix-warning" class="warning">물마 혼합 주의</span>
 </div>
 
+    <div id="challenge-mode-container">
+        <label for="challenge-mode">도전모드</label>
+        <input type="checkbox" id="challenge-mode">
+        <span>총 방어력 감소: <span id="total-defense-reduction">0.00%</span></span>
+    </div>
+
     <button class="clear-btn" id="clear-cart">전체 제거</button>
+
 </div>
 <div id="tooltip" class="tooltip"></div>
 
 <script>
-function parseBuff(buffStr,useLowest=false){
-    if(!buffStr) return 0;
+function parseBuff(buffStr, useLowest = false) {
+    if (!buffStr) return 0;
     let nums = buffStr.match(/[\d\.]+/g);
-    if(!nums) return 0;
+    if (!nums) return 0;
     nums = nums.map(Number);
     return useLowest ? Math.min(...nums) : Math.max(...nums);
 }
+
 const charactersData = [
-    {id:1, name:"나이트 엠퍼러", type:"물공", img:"이미지/나엠.png", buffs:["30.18%"], cool:0, cd:0, allowBuffMode:false},
-    {id:2, name:"룬 마스터", type:"마공", img:"이미지/룬마.png", buffs:["33.99%"], cool:0, cd:0, allowBuffMode:false},
-    {id:3, name:"임모탈", type:"물공", img:"이미지/탈모.png", buffs:["22%"], cool:1.3, cd:0, allowBuffMode:false},
-    {id:4, name:"제네시스", type:"마공", img:"이미지/제네.png", buffs:["22.87%"], cool:0, cd:0, allowBuffMode:false},
-    {id:5, name:"에테르 세이지", type:"마공", img:"이미지/에세.png", buffs:["25%"], cool:0, cd:0, allowBuffMode:false},
-    {id:6, name:"오즈 소서러", type:"마공", img:"이미지/오즈.png", buffs:["25.51%"], cool:0, cd:0, allowBuffMode:false},
-    {id:7, name:"메타모르피", type:"물공", img:"이미지/메타.png", buffs:["33.42%"], cool:0, cd:0.7, allowBuffMode:false},
-    {id:8, name:"로드 아조트", type:"물공", img:"이미지/로아.png", buffs:["39.67%"], cool:0, cd:0, allowBuffMode:false},
-    {id:9, name:"아네모스", type:"물공", img:"이미지/아네.png", buffs:["29.4%"], cool:0, cd:0, allowBuffMode:false},
-    {id:10, name:"데이브레이커", type:"마공", img:"이미지/데브.png", buffs:["25.75%"], cool:0, cd:0, allowBuffMode:false},
-    {id:11, name:"트와일라잇", type:"물공", img:"이미지/트와.png", buffs:["25.51%"], cool:0, cd:0, allowBuffMode:false},
-    {id:12, name:"프로피티스", type:"마공", img:"이미지/프피.png", buffs:["45.67~50.37%"], cool:1.2, cd:0, allowBuffMode:true},
-    {id:13, name:"퓨리어스 블레이드", type:"물공", img:"이미지/퓨블.png", buffs:["26.48%"], cool:0, cd:0, allowBuffMode:false},
-    {id:14, name:"레이지 하츠", type:"마공", img:"이미지/레하.png", buffs:["25.98%"], cool:0, cd:0, allowBuffMode:false},
-    {id:15, name:"노바 임퍼레이터", type:"마공", img:"이미지/노바.png", buffs:["30.92%"], cool:0, cd:0, allowBuffMode:false},
-    {id:16, name:"레버넌트", type:"물공", img:"이미지/레버.png", buffs:["49~52%"], cool:0, cd:3, allowBuffMode:true},
-    {id:17, name:"코드:얼티메이트", type:"마공", img:"이미지/얼티.png", buffs:["25.51~27.33%"], cool:1.3, cd:0, allowBuffMode:true},
-    {id:18, name:"코드:에센시아", type:"물공", img:"이미지/에센.png", buffs:["40.58%"], cool:0, cd:0, allowBuffMode:false},
-    {id:19, name:"코드:사리엘", type:"마공", img:"이미지/사리엘.png", buffs:["29.95%"], cool:0, cd:0, allowBuffMode:false},
-    {id:20, name:"코드:안티테제", type:"물공", img:"이미지/안티.png", buffs:["30.49%"], cool:0, cd:0, allowBuffMode:false},
-    {id:21, name:"코멧 크루세이더", type:"물공", img:"이미지/코크.png", buffs:["20.02%"], cool:1.3, cd:0, allowBuffMode:false},
-    {id:22, name:"페이탈팬텀", type:"마공", img:"이미지/페팬.png", buffs:["24%"], cool:0, cd:0, allowBuffMode:false},
-    {id:23, name:"센츄리온", type:"마공", img:"이미지/센츄.png", buffs:["23.83%"], cool:0, cd:0, allowBuffMode:false},
-    {id:24, name:"디우스 아에르", type:"녹", img:"이미지/디아.png", buffs:["39.24%"], cool:1.2, cd:0, allowBuffMode:false},
-    {id:25, name:"비천", type:"물공", img:"이미지/비천.png", buffs:["33.27% / 47.12%"], cool:0, cd:0, allowBuffMode:true},
-    {id:26, name:"범황", type:"마공", img:"이미지/범황.png", buffs:["18.63% / 29.34%"], cool:0, cd:0, allowBuffMode:true},
-    {id:27, name:"대라", type:"물공", img:"이미지/대라.png", buffs:["26.29% / 38.27%"], cool:1.5, cd:0, allowBuffMode:true},
-    {id:28, name:"일천", type:"녹", img:"이미지/일천.png", buffs:["34.4% / 48.95%"], cool:0, cd:0, allowBuffMode:true},
-    {id:29, name:"엠파이어 소드", type:"물공", img:"이미지/엠소.png", buffs:["35.55%"], cool:0, cd:0, allowBuffMode:false},
-    {id:30, name:"플레임 로드", type:"마공", img:"이미지/플로.png", buffs:["28.79%"], cool:0, cd:0, allowBuffMode:false},
-    {id:31, name:"블러디 퀸", type:"물공", img:"이미지/블퀸.png", buffs:["23.86~26.35%"], cool:0, cd:0, allowBuffMode:true},
-    {id:32, name:"아드레스티아", type:"마공", img:"이미지/아드.png", buffs:["29.12~32.43%"], cool:1.1, cd:0, allowBuffMode:true},
-    {id:33, name:"둠 브링어", type:"마공", img:"이미지/둠브.png", buffs:["21%"], cool:0, cd:4, allowBuffMode:false},
-    {id:34, name:"도미네이터", type:"물공", img:"이미지/도미.png", buffs:["41.7%"], cool:0, cd:0, allowBuffMode:false},
-    {id:35, name:"매드 패러독스", type:"마공", img:"이미지/매패.png", buffs:["21.5%"], cool:0, cd:12, allowBuffMode:false},
-    {id:36, name:"오버마인드", type:"녹", img:"이미지/오마.png", buffs:["36.07% / 46.96%"], cool:0, cd:0, allowBuffMode:true},
-    {id:37, name:"카타스트로피", type:"물공", img:"이미지/카타.png", buffs:["28.17%"], cool:1.3, cd:0, allowBuffMode:false},
-    {id:38, name:"이노센트", type:"마공", img:"이미지/이노.png", buffs:["34.32%"], cool:0, cd:0, allowBuffMode:false},
-    {id:39, name:"디앙겔리온", type:"물공", img:"이미지/디앙.png", buffs:["24.82% / 37.49%"], cool:0, cd:0, allowBuffMode:true},
-    {id:40, name:"데메르시오", type:"녹", img:"이미지/데메.png", buffs:["36.88%"], cool:1.25, cd:0, allowBuffMode:false},
-    {id:41, name:"템페스트 버스터", type:"물공", img:"이미지/템버.png", buffs:["39.75%"], cool:0, cd:0, allowBuffMode:false},
-    {id:42, name:"블랙 매서커", type:"물공", img:"이미지/블매.png", buffs:["21.8~26.35%"], cool:0, cd:0, allowBuffMode:true},
-    {id:43, name:"미네르바", type:"마공", img:"이미지/미네.png", buffs:["25.51%"], cool:0, cd:4, allowBuffMode:false},
-    {id:44, name:"프라임 오퍼레이터", type:"마공", img:"이미지/프오.png", buffs:["34.46%"], cool:1.3, cd:0, allowBuffMode:false},
-    {id:45, name:"리히터", type:"물공", img:"이미지/리히.png", buffs:["22%"], cool:1.2, cd:0, allowBuffMode:false},
-    {id:46, name:"블루헨", type:"녹", img:"이미지/블헨.png", buffs:["40.36%"], cool:1.2, cd:0, allowBuffMode:false},
-    {id:47, name:"헤르셔", type:"마공", img:"이미지/헬셔.png", buffs:["27.07%"], cool:0, cd:0, allowBuffMode:false},
-    {id:48, name:"비고트", type:"물공", img:"이미지/비곹.png", buffs:["38.24%"], cool:0, cd:0, cool_mcl:1.2, cool_hac:1.2, allowBuffMode:true},
-    {id:49, name:"이터니티 위너", type:"물공", img:"이미지/이위.png", buffs:["21.81%"], cool:0, cd:0, allowBuffMode:false},
-    {id:50, name:"라디언트 소울", type:"녹", img:"이미지/라소.png", buffs:["38.82%"], cool:0, cd:0, allowBuffMode:false},
-    {id:51, name:"니샤 라비린스", type:"물공", img:"이미지/니샤.png", buffs:["30.97%"], cool:1.3, cd:0, allowBuffMode:false},
-    {id:52, name:"트윈즈 피카로", type:"마공", img:"이미지/트피.png", buffs:["20%"], cool:0, cd:0,cool_hac:2, cool_mcl:1.0, allowBuffMode:false},
-    {id:53, name:"리버레이터", type:"물공", img:"이미지/리버.png", buffs:["24.56%"], cool:0, cd:0, allowBuffMode:false},
-    {id:54, name:"셀레스티아", type:"마공", img:"이미지/셀레.png", buffs:["40.82~57.71%"], cool:0, cd:0, allowBuffMode:true},
-    {id:55, name:"닉스 피에타", type:"녹", img:"이미지/닉스.png", buffs:["40.7%"], cool:0, cd:0,cool_hac:2, cool_mcl:2, allowBuffMode:false},
-    {id:56, name:"모르페우스", type:"마공", img:"이미지/몰페.png", buffs:["25%"], cool:0, cd:0, allowBuffMode:false},
-    {id:57, name:"젬블리스", type:"물공", img:"이미지/젬블.png", buffs:["22%"], cool:0, cd:4, allowBuffMode:false},
-    {id:58, name:"애버리스", type:"녹", img:"이미지/애버.png", buffs:["30.49% / 50.41%"], cool:0, cd:0, allowBuffMode:true},
-    {id:59, name:"아클리스", type:"마공", img:"이미지/아클.png", buffs:["41.83%"], cool:0, cd:2, allowBuffMode:false},
-    {id:60, name:"미스치프", type:"마공", img:"이미지/미치.png", buffs:["26.14%"], cool:0, cd:0, allowBuffMode:false}
+    {id:1, name:"나이트 엠퍼러", type:"물공", img:"이미지/나엠.png", buffs:["30.18%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 50},
+    {id:2, name:"룬 마스터", type:"마공", img:"이미지/룬마.png", buffs:["33.99%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:3, name:"임모탈", type:"물공", img:"이미지/탈모.png", buffs:["22%"], cool:1.3, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:4, name:"제네시스", type:"마공", img:"이미지/제네.png", buffs:["22.87%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:5, name:"에테르 세이지", type:"마공", img:"이미지/에세.png", buffs:["25%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:6, name:"오즈 소서러", type:"마공", img:"이미지/오즈.png", buffs:["25.51%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:7, name:"메타모르피", type:"물공", img:"이미지/메타.png", buffs:["33.42%"], cool:0, cd:0.7, allowBuffMode:false, defenseReduction: 36},
+    {id:8, name:"로드 아조트", type:"물공", img:"이미지/로아.png", buffs:["39.67%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:9, name:"아네모스", type:"물공", img:"이미지/아네.png", buffs:["29.4%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 26},
+    {id:10, name:"데이브레이커", type:"마공", img:"이미지/데브.png", buffs:["25.75%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:11, name:"트와일라잇", type:"물공", img:"이미지/트와.png", buffs:["25.51%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:12, name:"프로피티스", type:"마공", img:"이미지/프피.png", buffs:["45.67~50.37%"], cool:1.2, cd:0, allowBuffMode:true, defenseReduction: { '보뎀X': 20, '보뎀O': 20 }},
+    {id:13, name:"퓨리어스 블레이드", type:"물공", img:"이미지/퓨블.png", buffs:["26.48%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 32.5},
+    {id:14, name:"레이지 하츠", type:"마공", img:"이미지/레하.png", buffs:["25.98%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 25},
+    {id:15, name:"노바 임퍼레이터", type:"마공", img:"이미지/노바.png", buffs:["30.92%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 15},
+    {id:16, name:"레버넌트", type:"물공", img:"이미지/레버.png", buffs:["49~52%"], cool:0, cd:3, allowBuffMode:true, defenseReduction: { '저점': 20, '고점': 20 }},
+    {id:17, name:"코드:얼티메이트", type:"마공", img:"이미지/얼티.png", buffs:["25.51~27.33%"], cool:1.3, cd:0, allowBuffMode:true, defenseReduction: { '저점': 30, '고점': 30 }},
+    {id:18, name:"코드:에센시아", type:"물공", img:"이미지/에센.png", buffs:["40.58%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:19, name:"코드:사리엘", type:"마공", img:"이미지/사리엘.png", buffs:["29.95%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:20, name:"코드:안티테제", type:"물공", img:"이미지/안티.png", buffs:["30.49%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:21, name:"코멧 크루세이더", type:"물공", img:"이미지/코크.png", buffs:["20.02% / 23.07%"], cool:1.3, cd:0, allowBuffMode:true, defenseReduction: { '저점': 10, '고점': 23.5 }},
+    {id:22, name:"페이탈팬텀", type:"마공", img:"이미지/페팬.png", buffs:["24%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:23, name:"센츄리온", type:"마공", img:"이미지/센츄.png", buffs:["23.83%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 40},
+    {id:24, name:"디우스 아에르", type:"녹", img:"이미지/디아.png", buffs:["39.24%"], cool:1.2, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:25, name:"비천", type:"물공", img:"이미지/비천.png", buffs:["33.27% / 47.12%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '저점': 5, '고점': 38.25 }},
+    {id:26, name:"범황", type:"마공", img:"이미지/범황.png", buffs:["18.63% / 29.34%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '저점': 20, '고점': 48 }},
+    {id:27, name:"대라", type:"물공", img:"이미지/대라.png", buffs:["26.29% / 38.27%"], cool:1.5, cd:0, allowBuffMode:true, defenseReduction: { '저점': 15, '고점': 44.75 }},
+    {id:28, name:"일천", type:"녹", img:"이미지/일천.png", buffs:["34.4% / 48.95%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '저점': 0, '고점': 35 }},
+    {id:29, name:"엠파이어 소드", type:"물공", img:"이미지/엠소.png", buffs:["35.55%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 46.8},
+    {id:30, name:"플레임 로드", type:"마공", img:"이미지/플로.png", buffs:["28.79%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:31, name:"블러디 퀸", type:"물공", img:"이미지/블퀸.png", buffs:["23.86~26.35%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '저점': 0, '고점': 0 }},
+    {id:32, name:"아드레스티아", type:"마공", img:"이미지/아드.png", buffs:["29.12~32.43%"], cool:1.1, cd:0, allowBuffMode:true, defenseReduction: { '저점': 20, '고점': 20 }},
+    {id:33, name:"둠 브링어", type:"마공", img:"이미지/둠브.png", buffs:["21%"], cool:0, cd:4, allowBuffMode:false, defenseReduction: 0},
+    {id:34, name:"도미네이터", type:"물공", img:"이미지/도미.png", buffs:["41.7%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 21.5},
+    {id:35, name:"매드 패러독스", type:"마공", img:"이미지/매패.png", buffs:["21.5%"], cool:0, cd:12, allowBuffMode:false, defenseReduction: 28},
+    {id:36, name:"오버마인드", type:"녹", img:"이미지/오마.png", buffs:["36.07% / 46.96%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '트롤리': 20, '메스': 20 }},
+    {id:37, name:"카타스트로피", type:"물공", img:"이미지/카타.png", buffs:["28.17%"], cool:1.3, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:38, name:"이노센트", type:"마공", img:"이미지/이노.png", buffs:["34.32%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 31},
+    {id:39, name:"디앙겔리온", type:"물공", img:"이미지/디앙.png", buffs:["24.82% / 37.49%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '저점': 20, '고점': 46.4 }},
+    {id:40, name:"데메르시오", type:"녹", img:"이미지/데메.png", buffs:["36.88%"], cool:1.25, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:41, name:"템페스트 버스터", type:"물공", img:"이미지/템버.png", buffs:["39.75%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 26},
+    {id:42, name:"블랙 매서커", type:"물공", img:"이미지/블매.png", buffs:["21.8%"], cool:0, cd:0, allowBuffMode:false, defenseReduction:30},
+    {id:43, name:"미네르바", type:"마공", img:"이미지/미네.png", buffs:["25.51%"], cool:0, cd:4, allowBuffMode:false, defenseReduction: 30},
+    {id:44, name:"프라임 오퍼레이터", type:"마공", img:"이미지/프오.png", buffs:["34.46%"], cool:1.3, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:45, name:"리히터", type:"물공", img:"이미지/리히.png", buffs:["22%"], cool:1.2, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:46, name:"블루헨", type:"녹", img:"이미지/블헨.png", buffs:["40.36%"], cool:1.2, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:47, name:"헤르셔", type:"마공", img:"이미지/헬셔.png", buffs:["27.07%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 35},
+    {id:48, name:"비고트", type:"물공", img:"이미지/비곹.png", buffs:["38.24%"], cool:0, cd:0, cool_mcl:1.2, cool_hac:1.2, allowBuffMode:true, defenseReduction: { '노첸': 20, '첸': 20 }},
+    {id:49, name:"이터니티 위너", type:"물공", img:"이미지/이위.png", buffs:["21.81%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 20},
+    {id:50, name:"라디언트 소울", type:"녹", img:"이미지/라소.png", buffs:["38.82%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:51, name:"니샤 라비린스", type:"물공", img:"이미지/니샤.png", buffs:["30.97%"], cool:1.3, cd:0, allowBuffMode:false, defenseReduction: 30},
+    {id:52, name:"트윈즈 피카로", type:"마공", img:"이미지/트피.png", buffs:["20%"], cool:0, cd:0,cool_hac:2, cool_mcl:1.0, allowBuffMode:false, defenseReduction: 0},
+    {id:53, name:"리버레이터", type:"물공", img:"이미지/리버.png", buffs:["24.56%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 10},
+    {id:54, name:"셀레스티아", type:"마공", img:"이미지/셀레.png", buffs:["40.82~57.71%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '기본': 18, '미지': 18 }},
+    {id:55, name:"닉스 피에타", type:"녹", img:"이미지/닉스.png", buffs:["40.7%"], cool:0, cd:0,cool_hac:2, cool_mcl:2, allowBuffMode:false, defenseReduction: 20},
+    {id:56, name:"모르페우스", type:"마공", img:"이미지/몰페.png", buffs:["25%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 0},
+    {id:57, name:"젬블리스", type:"물공", img:"이미지/젬블.png", buffs:["22%"], cool:0, cd:4, allowBuffMode:false, defenseReduction: 0},
+    {id:58, name:"애버리스", type:"녹", img:"이미지/애버.png", buffs:["30.49% / 50.41%"], cool:0, cd:0, allowBuffMode:true, defenseReduction: { '비서약': 20, '서약': 20 }},
+    {id:59, name:"아클리스", type:"마공", img:"이미지/아클.png", buffs:["41.83%"], cool:0, cd:2, allowBuffMode:false, defenseReduction: 30},
+    {id:60, name:"미스치프", type:"마공", img:"이미지/미치.png", buffs:["26.14%"], cool:0, cd:0, allowBuffMode:false, defenseReduction: 20}
 ];
+
+function updateBuffButton(container, char) {
+    container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+    
+    if (char.buffMode) {
+        const activeBtn = Array.from(container.querySelectorAll('button')).find(b => {
+            return b.dataset.mode === char.buffMode;
+        });
+        if (activeBtn) activeBtn.classList.add('active');
+    }
+}
 
 const container = document.getElementById('character-container');
 const cartItems = document.getElementById('cart-items');
@@ -215,193 +253,186 @@ const totalSpeed = document.getElementById('total-speed');
 const totalCd = document.getElementById('total-cd');
 const totalMcl = document.getElementById('total-mcl');
 const totalHac = document.getElementById('total-hac');
+const totalDefenseReduction = document.getElementById('total-defense-reduction');
 const goodParty = document.getElementById('good-party');
 const mixWarning = document.getElementById('mix-warning');
 const tooltip = document.getElementById('tooltip');
+const challengeModeCheckbox = document.getElementById('challenge-mode');
 
-let selected=[];
-let activeFilter='all';
+let selected = [];
+let activeFilter = 'all';
 
-function renderCharacters(filter='all'){
-    container.innerHTML='';
-    charactersData.forEach(char=>{
-        if(filter!=='all' && char.type!==filter) return;
+function renderCharacters(filter = 'all') {
+    container.innerHTML = '';
+    charactersData.forEach(char => {
+        if (filter !== 'all' && char.type !== filter) return;
         const div = document.createElement('div');
         div.classList.add('character');
-        if(selected.includes(char.id)) div.classList.add('selected');
-        div.dataset.type=char.type;
-        div.dataset.id=char.id;
-        div.innerHTML=`<img src="${char.img}" alt="${char.name}"><p>${char.name}</p>`;
+        if (selected.includes(char.id)) div.classList.add('selected');
+        div.dataset.type = char.type;
+        div.dataset.id = char.id;
+        div.innerHTML = `<img src="${char.img}" alt="${char.name}"><p>${char.name}</p>`;
         container.appendChild(div);
 
-        div.addEventListener('click',()=> {
-            if(!selected.includes(char.id)) selected.push(char.id);
-            else selected = selected.filter(id=>id!==char.id);
+        div.addEventListener('click', () => {
+            if (!selected.includes(char.id)) {
+                selected.push(char.id);
+            } else {
+                selected = selected.filter(id => id !== char.id);
+            }
             div.classList.toggle('selected');
             updateCart();
             checkMixWarning();
         });
 
-        div.addEventListener('mouseenter',()=> {
-            tooltip.innerHTML=`타입: ${char.type} <br> 실뎀증: ${char.buffs.join(' / ')}`;
-            tooltip.style.opacity=1;
+        div.addEventListener('mouseenter', (e) => {
+            const charInfo = charactersData.find(c => c.id === parseInt(e.currentTarget.dataset.id));
+            tooltip.innerHTML = `타입: ${charInfo.type} <br> 실뎀증: ${charInfo.buffs.join(' / ')}`;
+            tooltip.style.opacity = 1;
         });
-        div.addEventListener('mousemove',e=>{
-            tooltip.style.top=e.pageY+15+'px';
-            tooltip.style.left=e.pageX+15+'px';
+        div.addEventListener('mousemove', e => {
+            tooltip.style.top = e.pageY + 15 + 'px';
+            tooltip.style.left = e.pageX + 15 + 'px';
         });
-        div.addEventListener('mouseleave',()=> tooltip.style.opacity=0);
+        div.addEventListener('mouseleave', () => tooltip.style.opacity = 0);
     });
 }
 
-function updateBuffButton(container, char){
-    container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-    
-    if(char.buffMode){
-        // data-mode 속성으로 직접 비교하도록 수정
-        const activeBtn = Array.from(container.querySelectorAll('button')).find(b => {
-            return b.dataset.mode === char.buffMode;
-        });
-        if(activeBtn) activeBtn.classList.add('active');
-    }
-}
-
-function updateCart(){
-    cartItems.innerHTML='';
+function updateCart() {
+    const isChallengeMode = challengeModeCheckbox.checked;
+    cartItems.innerHTML = '';
     let totalBuff = 1;
     let totalCool = 1;
     let totalCdVal = 0;
     let totalMclVal = 1;
     let totalHacVal = 1;
+    let totalDefenseMultiplier = 1;
 
-    selected.forEach(id=>{
-        const char = charactersData.find(c=>c.id===id);
-        let buffStr = char.buffs[0];
-        let buffValue = parseBuff(buffStr, true);
-
-        let buffDivElement = document.createElement('div');
-        buffDivElement.classList.add('buff-mode');
-        
-        // 오버마인드 전용 버튼 로직
-        if(char.id===36){
-            if(!char.buffMode) char.buffMode='트롤리';
-            const trolleyBtn=document.createElement('button');
-            const messBtn=document.createElement('button');
-            trolleyBtn.textContent='트롤리'; messBtn.textContent='메스';
-            trolleyBtn.dataset.mode = '트롤리';
-            messBtn.dataset.mode = '메스';
-            trolleyBtn.addEventListener('click',()=>{ char.buffMode='트롤리'; updateCart(); });
-            messBtn.addEventListener('click',()=>{ char.buffMode='메스'; updateCart(); });
-            buffDivElement.appendChild(trolleyBtn); buffDivElement.appendChild(messBtn);
-            updateBuffButton(buffDivElement, char);
-        }
-        else if(/[~\/]/.test(buffStr) && ![12,48,54,58].includes(char.id)){
-            const lowBtn = document.createElement('button');
-            const highBtn = document.createElement('button');
-            lowBtn.dataset.mode = 'low';
-            highBtn.dataset.mode = 'high';
-            let nums = buffStr.match(/[\d.]+/g).map(Number);
-            lowBtn.textContent = `저점 (${nums[0]}%)`;
-            highBtn.textContent = `고점 (${nums[nums.length-1]}%)`;
-            lowBtn.addEventListener('click', ()=>{ char.buffMode='low'; updateCart(); });
-            highBtn.addEventListener('click', ()=>{ char.buffMode='high'; updateCart(); });
-            buffDivElement.appendChild(lowBtn); buffDivElement.appendChild(highBtn);
-            if(!char.buffMode) char.buffMode='low';
-            buffValue = (char.buffMode==='low') ? nums[0] : nums[nums.length-1];
-            updateBuffButton(buffDivElement, char);
-        }
-
-        if([12,48,54,58].includes(char.id)){
-            if(!char.buffMode){
-                if(char.id===48) char.buffMode='노첸';
-                if(char.id===58) char.buffMode='비서약';
-                if(char.id===54) char.buffMode='기본';
-                if(char.id===12) char.buffMode='보뎀X';
-            }
-            if(char.id===48){
-                const 노첸Btn=document.createElement('button'); const 첸Btn=document.createElement('button');
-                노첸Btn.textContent='노첸'; 첸Btn.textContent='첸';
-                노첸Btn.dataset.mode = '노첸';
-                첸Btn.dataset.mode = '첸';
-                노첸Btn.addEventListener('click', ()=>{ char.buffMode='노첸'; updateCart(); });
-                첸Btn.addEventListener('click', ()=>{ char.buffMode='첸'; updateCart(); });
-                buffDivElement.appendChild(노첸Btn); buffDivElement.appendChild(첸Btn);
-            } else if(char.id===58){
-                const 비서약Btn=document.createElement('button'); const 서약Btn=document.createElement('button');
-                비서약Btn.textContent='비서약'; 서약Btn.textContent='서약';
-                비서약Btn.dataset.mode = '비서약';
-                서약Btn.dataset.mode = '서약';
-                비서약Btn.addEventListener('click',()=>{ char.buffMode='비서약'; updateCart(); });
-                서약Btn.addEventListener('click',()=>{ char.buffMode='서약'; updateCart(); });
-                buffDivElement.appendChild(비서약Btn); buffDivElement.appendChild(서약Btn);
-            } else if(char.id===54){
-                const 기본Btn=document.createElement('button'); const 미지Btn=document.createElement('button');
-                기본Btn.textContent='기본'; 미지Btn.textContent='미지';
-                기본Btn.dataset.mode = '기본';
-                미지Btn.dataset.mode = '미지';
-                기본Btn.addEventListener('click',()=>{ char.buffMode='기본'; updateCart(); });
-                미지Btn.addEventListener('click',()=>{ char.buffMode='미지'; updateCart(); });
-                buffDivElement.appendChild(기본Btn); buffDivElement.appendChild(미지Btn);
-            } else if(char.id===12){
-                const xBtn=document.createElement('button'); const oBtn=document.createElement('button');
-                xBtn.textContent='보뎀X'; oBtn.textContent='보뎀O';
-                xBtn.dataset.mode = '보뎀X';
-                oBtn.dataset.mode = '보뎀O';
-                xBtn.addEventListener('click',()=>{ char.buffMode='보뎀X'; updateCart(); });
-                oBtn.addEventListener('click',()=>{ char.buffMode='보뎀O'; updateCart(); });
-                buffDivElement.appendChild(xBtn); buffDivElement.appendChild(oBtn);
-            }
-            if(char.id===48){ if(char.buffMode==='노첸'){ buffValue=38.24; } else if(char.buffMode==='첸'){ buffValue=38.24; } }
-            if(char.id===58){ buffValue=(char.buffMode==='비서약')?30.49:50.41; }
-            if(char.id===54){ buffValue=(char.buffMode==='기본')?57.71:57.71; }
-            if(char.id===12){ buffValue=(char.buffMode==='보뎀X')?45.67:50.37; }
-            updateBuffButton(buffDivElement, char);
-        }
-
-        let coolVal = Number(char.cool || 1);
-        let mclVal = Number(char.cool_mcl || 1);
-        let hacVal = Number(char.cool_hac || 1);
-        
-        if (char.id === 36) {
-            if (char.buffMode === '메스') {
-                buffValue = 46.96;
-                coolVal = 1;
-            } else if (char.buffMode === '트롤리') {
-                buffValue = 36.07;
-                coolVal = 1.5;
-            }
-        }
-        if (char.id === 58) {
-            if (char.buffMode === '비서약') coolVal = 1.2;
-            else if (char.buffMode === '서약') coolVal = 1.3;
-        }
-        if (char.id === 48) {
-            if (char.buffMode === '노첸') { coolVal = 1.2; mclVal = 1.2; hacVal = 1.2; }
-            else if (char.buffMode === '첸') { coolVal = 1.3; mclVal = 1; hacVal = 1; }
-        }
-        if (char.id === 54) {
-            if (char.buffMode === '기본') { coolVal = 1.1; }
-            else if (char.buffMode === '미지') { coolVal = 1.2; }
-        }
-
-        totalBuff *= (1 + buffValue / 100);
-        totalCool *= coolVal;
-        totalMclVal *= mclVal;
-        totalHacVal *= hacVal;
-        totalCdVal += Number(char.cd || 0);
+    selected.forEach(id => {
+        const char = charactersData.find(c => c.id === id);
+        let buffValue = 0;
+        let currentDefenseReduction = 0;
+        let coolValue = 1;
+        let mclValue = 1;
+        let hacValue = 1;
 
         const item = document.createElement('div');
         item.classList.add('cart-item');
-        item.dataset.id=char.id;
-        item.innerHTML=`<img src="${char.img}" alt="${char.name}"><div class="buff-mode"></div><button class="remove-btn">×</button>`;
-
+        item.dataset.id = char.id;
+        item.innerHTML = `<img src="${char.img}" alt="${char.name}"><div class="buff-mode"></div><button class="remove-btn">×</button>`;
         const itemBuffDiv = item.querySelector('.buff-mode');
-        itemBuffDiv.appendChild(buffDivElement);
+        
+        if (char.allowBuffMode) {
+            if (!char.buffMode) {
+                if (char.id === 12) char.buffMode = '보뎀X';
+                else if (char.id === 36) char.buffMode = '트롤리';
+                else if (char.id === 48) char.buffMode = '노첸';
+                else if (char.id === 54) char.buffMode = '기본';
+                else if (char.id === 58) char.buffMode = '비서약';
+                else char.buffMode = '저점';
+            }
+
+            let modes = [];
+            let buffValues = {};
+            let defenseValues = {};
+            let coolValues = {};
+            let mclValues = {};
+            let hacValues = {};
+
+            if (char.id === 12) {
+                modes = ['보뎀X', '보뎀O'];
+                buffValues = { '보뎀X': 45.67, '보뎀O': 50.37 };
+                defenseValues = { '보뎀X': 20, '보뎀O': 20 };
+                coolValues = { '보뎀X': 1.2, '보뎀O': 1.2 };
+            } else if (char.id === 21) {
+                modes = ['저점', '고점'];
+                let nums = char.buffs[0].match(/[\d.]+/g).map(Number);
+                buffValues = { '저점': nums[0], '고점': nums[nums.length - 1] };
+                defenseValues = { '저점': 10, '고점': 23.5 };
+                coolValues = { '저점': 1.3, '고점': 1.3 };
+            } else if (char.id === 36) {
+                modes = ['트롤리', '메스'];
+                buffValues = { '트롤리': 36.07, '메스': 46.96 };
+                coolValues = { '트롤리': 1.5, '메스': 1.0 };
+                defenseValues = { '트롤리': 20, '메스': 20 };
+            } else if (char.id === 48) { // 비고트
+                modes = ['노첸', '첸'];
+                buffValues = { '노첸': 38.24, '첸': 38.24 };
+                coolValues = { '노첸': 1.2, '첸': 1.3 };
+                mclValues = { '노첸': 1.2, '첸': 1 };
+                hacValues = { '노첸': 1.2, '첸': 1 };
+                defenseValues = { '노첸': 20, '첸': 20 };
+            } else if (char.id === 54) {
+                modes = ['기본', '미지'];
+                buffValues = { '기본': 57.71, '미지': 57.71 };
+                coolValues = { '기본': 1.1, '미지': 1.2 };
+                defenseValues = { '기본': 18, '미지': 18 };
+            } else if (char.id === 58) { // 애버리스
+                modes = ['비서약', '서약'];
+                buffValues = { '비서약': 30.49, '서약': 50.41 };
+                coolValues = { '비서약': 1.2, '서약': 1.3 };
+                defenseValues = { '비서약': 20, '서약': 20 };
+            } else { // 비천, 범황, 대라, 일천 등 일반적인 저점/고점 모드
+                modes = ['저점', '고점'];
+                let nums = char.buffs[0].match(/[\d.]+/g).map(Number);
+                buffValues = { '저점': nums[0], '고점': nums[nums.length - 1] };
+                defenseValues = char.defenseReduction; // 이 부분을 수정했습니다.
+                coolValues = { '저점': char.cool || 1, '고점': char.cool || 1 };
+                mclValues = { '저점': char.cool_mcl || 1, '고점': char.cool_mcl || 1 };
+                hacValues = { '저점': char.cool_hac || 1, '고점': char.cool_hac || 1 };
+            }
+
+            modes.forEach(mode => {
+                const btn = document.createElement('button');
+                btn.textContent = mode;
+                btn.dataset.mode = mode;
+                btn.addEventListener('click', () => {
+                    char.buffMode = mode;
+                    updateCart();
+                });
+                itemBuffDiv.appendChild(btn);
+            });
+
+            updateBuffButton(itemBuffDiv, char);
+            
+            buffValue = buffValues[char.buffMode] || 0;
+            currentDefenseReduction = defenseValues[char.buffMode] !== undefined ? defenseValues[char.buffMode] : 0;
+            coolValue = coolValues[char.buffMode] || 1;
+            mclValue = mclValues[char.buffMode] || 1;
+            hacValue = hacValues[char.buffMode] || 1;
+        } else {
+            if (isChallengeMode && char.id === 1) {
+                buffValue = 40.00;
+            } else {
+                buffValue = parseBuff(char.buffs[0], false);
+            }
+            
+            if (typeof char.defenseReduction === 'number') {
+                currentDefenseReduction = char.defenseReduction;
+            } else if (typeof char.defenseReduction === 'object') {
+                currentDefenseReduction = char.defenseReduction['저점'];
+            }
+            coolValue = char.cool || 1;
+            mclValue = char.cool_mcl || 1;
+            hacValue = char.cool_hac || 1;
+        }
+        
+        totalBuff *= (1 + buffValue / 100);
+        totalCool *= coolValue;
+        totalCdVal += (char.cd || 0);
+        totalMclVal *= mclValue;
+        totalHacVal *= hacValue;
+        
+        if (currentDefenseReduction > 0) {
+            totalDefenseMultiplier *= (1 - currentDefenseReduction / 100);
+        }
 
         const removeBtn = item.querySelector('.remove-btn');
-        removeBtn.addEventListener('click',()=>{
-            selected=selected.filter(i=>i!==char.id);
-            updateCart(); renderCharacters(activeFilter); checkMixWarning();
+        removeBtn.addEventListener('click', () => {
+            selected = selected.filter(i => i !== char.id);
+            updateCart();
+            renderCharacters(activeFilter);
+            checkMixWarning();
         });
 
         cartItems.appendChild(item);
@@ -412,30 +443,37 @@ function updateCart(){
     totalCd.textContent = `${totalCdVal}초`;
     totalMcl.textContent = `${totalMclVal.toFixed(2)}배`;
     totalHac.textContent = `${totalHacVal.toFixed(2)}배`;
+    totalDefenseReduction.textContent = `${((1 - totalDefenseMultiplier) * 100).toFixed(2)}%`;
 }
 
-
-function checkMixWarning(){
-    const types = selected.map(id=>charactersData.find(c=>c.id===id).type);
-    if(types.includes('물공') && types.includes('마공')) mixWarning.style.display='inline-block';
-    else mixWarning.style.display='none';
+function checkMixWarning() {
+    const types = selected.map(id => charactersData.find(c => c.id === id).type);
+    if (types.includes('물공') && types.includes('마공')) mixWarning.style.display = 'inline-block';
+    else mixWarning.style.display = 'none';
 }
 
-document.querySelectorAll('.category-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-        document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeFilter = btn.dataset.filter;
         renderCharacters(activeFilter);
     });
 });
 
-clearBtn.addEventListener('click',()=>{ selected=[]; updateCart(); renderCharacters(activeFilter); });
+challengeModeCheckbox.addEventListener('change', () => {
+    updateCart();
+});
+
+clearBtn.addEventListener('click', () => { 
+    selected = []; 
+    charactersData.forEach(char => delete char.buffMode);
+    updateCart(); 
+    renderCharacters(activeFilter); 
+});
 
 renderCharacters();
 updateCart();
 </script>
 </body>
 </html>
-
-
